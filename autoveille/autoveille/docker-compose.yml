@@ -1,0 +1,60 @@
+services:
+  # Ramasse les annonces et calcule les scores. N'envoie rien.
+  collecteur:
+    build: .
+    command: python -m app.collecteur
+    env_file: .env
+    volumes:
+      - ./config.yml:/srv/config.yml:ro
+      - data:/srv/data
+    restart: unless-stopped
+
+  # Alerte sur les voitures roulantes sous le prix du marche.
+  alertes-saines:
+    build: .
+    command: python -m app.alerteur
+    environment:
+      MODE: saines
+    env_file: .env
+    volumes:
+      - ./config.yml:/srv/config.yml:ro
+      - data:/srv/data
+    restart: unless-stopped
+    depends_on: [collecteur]
+
+  # Alerte sur les vehicules a reparer et les annonces tres bas prix.
+  alertes-hs:
+    build: .
+    command: python -m app.alerteur
+    environment:
+      MODE: hs
+    env_file: .env
+    volumes:
+      - ./config.yml:/srv/config.yml:ro
+      - data:/srv/data
+    restart: unless-stopped
+    depends_on: [collecteur]
+
+  # Bot Telegram a l'ecoute : estimation d'une voiture a la demande.
+  bot:
+    build: .
+    command: python -m app.bot
+    env_file: .env
+    volumes:
+      - ./config.yml:/srv/config.yml:ro
+      - data:/srv/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: gunicorn -b 0.0.0.0:8000 -w 2 app.web:app
+    env_file: .env
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./config.yml:/srv/config.yml:ro
+      - data:/srv/data
+    restart: unless-stopped
+
+volumes:
+  data:

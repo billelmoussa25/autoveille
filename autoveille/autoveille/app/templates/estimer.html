@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estimer une voiture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --fond:#F6F7F8; --surface:#FFF; --encre:#16181C; --gris:#767C85;
+          --ligne:#E3E5E8; --bon:#14664A; --cher:#9C4A2A; }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:var(--fond); color:var(--encre);
+    font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:15px;
+    line-height:1.45; font-variant-numeric:tabular-nums;
+  }
+  .page { max-width:640px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { margin:0; font-size:21px; font-weight:600; letter-spacing:-0.015em; }
+  .retour { float:right; font-size:13px; font-weight:400; color:var(--gris);
+            text-decoration:none; padding-top:4px; }
+  .retour:hover { color:var(--encre); }
+  header { padding-bottom:20px; border-bottom:1px solid var(--ligne); }
+  .aide { margin:6px 0 0; color:var(--gris); font-size:14px; font-weight:300; }
+
+  .saisie { display:flex; gap:8px; margin:20px 0 4px; }
+  input[type=text] {
+    flex:1; padding:9px 12px; border:1px solid var(--ligne); border-radius:3px;
+    background:var(--surface); font:inherit; color:var(--encre);
+  }
+  input[type=text]:focus { outline:none; border-color:#A8AEB6; }
+  button {
+    padding:9px 18px; border:1px solid var(--encre); border-radius:3px;
+    background:var(--encre); color:#fff; font:inherit; font-weight:500; cursor:pointer;
+  }
+  .exemples { color:#A2A8B0; font-size:12.5px; font-weight:300; }
+  .exemples a { color:var(--gris); text-decoration:none; border-bottom:1px solid var(--ligne); }
+
+  .resultat { margin-top:28px; padding-top:22px; border-top:1px solid var(--ligne); }
+  .modele { font-size:16px; font-weight:600; letter-spacing:-0.005em; }
+  .carac { color:var(--gris); font-size:13.5px; font-weight:300; margin-top:2px; }
+  .verdict { margin:18px 0 4px; font-size:24px; font-weight:600; letter-spacing:-0.02em; }
+  .verdict.bon { color:var(--bon); }
+  .verdict.cher { color:var(--cher); }
+  .contexte { color:var(--gris); font-size:13.5px; font-weight:300; }
+  .contexte b { color:var(--encre); font-weight:500; }
+  .echantillon { margin-top:14px; color:#A2A8B0; font-size:12.5px; font-weight:300; }
+  .drapeau { margin-top:12px; padding-left:13px; border-left:2px solid #D9A441;
+             color:#8A5A21; font-size:13px; }
+  .erreur { color:var(--cher); font-weight:400; }
+  .profils { margin-top:34px; padding-top:18px; border-top:1px solid var(--ligne);
+             color:#A2A8B0; font-size:12.5px; font-weight:300; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1><a class="retour" href="/">← toutes les annonces</a>Estimer une voiture</h1>
+    <p class="aide">Modèle, année, kilométrage, prix. Ajoute la panne si le véhicule est HS.</p>
+  </header>
+
+  <form class="saisie" action="/estimer" method="get">
+    <input type="text" name="q" value="{{ saisie }}" autofocus
+           placeholder="clio 4 2014 130000 4200">
+    <button type="submit">Estimer</button>
+  </form>
+  <p class="exemples">
+    <a href="/estimer?q=clio+4+2014+130000+4200">clio 4 2014 130000 4200</a> ·
+    <a href="/estimer?q=golf+2011+210000+2900+embrayage+hs">golf 2011 210000 2900 embrayage hs</a>
+  </p>
+
+  {% if resultat %}
+    <div class="resultat">
+    {% if resultat.erreur %}
+      <p class="erreur">{{ resultat.erreur }}</p>
+    {% else %}
+      <div class="modele">{{ resultat.profil.libelle }}</div>
+      <div class="carac">
+        {{ resultat.annee }} · {{ '{:,}'.format(resultat.km).replace(',', ' ') }} km ·
+        {{ '{:,}'.format(resultat.prix).replace(',', ' ') }} €
+        {%- if resultat.etat == 'reparer' %} · à réparer{% endif %}
+      </div>
+
+      {% if resultat.median is none %}
+        <p class="verdict">Pas de référence</p>
+        <p class="contexte">
+          Seulement {{ resultat.comparables }} annonces comparables en base.
+          Laisse le collecteur tourner encore un peu.
+        </p>
+
+      {% elif resultat.etat == 'reparer' %}
+        {% if resultat.marge is not none %}
+          <p class="verdict {{ 'bon' if resultat.marge >= resultat.marge_minimum else 'cher' }}">
+            Marge ~{{ '{:,}'.format(resultat.marge).replace(',', ' ') }} €
+          </p>
+          <p class="contexte">
+            Revente estimée <b>{{ '{:,}'.format(resultat.median).replace(',', ' ') }} €</b>,
+            réparation {{ resultat.cout_min }}–{{ resultat.cout_max }} €
+            ({{ (resultat.panne or 'panne non précisée').replace('_', ' ') }}),
+            décote de remise en route déduite.
+            {% if resultat.marge >= resultat.marge_minimum %}
+              Au-dessus de ton seuil de {{ resultat.marge_minimum }} €.
+            {% else %}
+              En dessous de ton seuil de {{ resultat.marge_minimum }} €.
+            {% endif %}
+          </p>
+        {% else %}
+          <p class="verdict">Marge incalculable</p>
+          <p class="contexte">Aucune fourchette de coût pour cette panne.</p>
+        {% endif %}
+
+      {% else %}
+        {% set p = (resultat.ecart * 100)|round|int %}
+        <p class="verdict {{ 'bon' if resultat.ecart >= resultat.seuil else ('cher' if resultat.ecart < -0.05 else '') }}">
+          {% if p == 0 %}Au prix du marché
+          {% elif p > 0 %}{{ p }} % sous le marché
+          {% else %}{{ -p }} % au-dessus du marché{% endif %}
+        </p>
+        <p class="contexte">
+          Référence <b>{{ '{:,}'.format(resultat.median).replace(',', ' ') }} €</b> pour
+          ce millésime et ce kilométrage.
+          {% if resultat.ecart >= resultat.seuil %}
+            Au-delà de ton seuil d'alerte de {{ (resultat.seuil * 100)|round|int }} %.
+          {% elif resultat.ecart >= 0 %}
+            Dans le marché.
+          {% else %}
+            Au-dessus du marché.
+          {% endif %}
+        </p>
+      {% endif %}
+
+      {% for d in resultat.drapeaux %}
+        <p class="drapeau">Mention « {{ d.replace('_', ' ') }} » repérée dans ta saisie.</p>
+      {% endfor %}
+
+      <p class="echantillon">Calculé sur {{ resultat.comparables }} annonces comparables en base.</p>
+    {% endif %}
+    </div>
+  {% endif %}
+
+  <p class="profils">
+    Modèles reconnus : {% for p in profils %}{{ p.libelle }}{% if not loop.last %} · {% endif %}{% endfor %}
+  </p>
+
+</div>
+</body>
+</html>

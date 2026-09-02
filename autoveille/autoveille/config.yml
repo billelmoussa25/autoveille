@@ -1,0 +1,251 @@
+# --- Reglages generaux -------------------------------------------------------
+general:
+  intervalle_minutes: 25          # frequence de passage du collecteur
+
+# --- Zone geographique -------------------------------------------------------
+zone:
+  # Melange libre de regions et de departements.
+  # Regions disponibles : idf, hauts_de_france, grand_est, normandie, bretagne,
+  # pays_de_la_loire, centre_val_de_loire, bourgogne_franche_comte,
+  # nouvelle_aquitaine, occitanie, auvergne_rhone_alpes, paca, corse
+  # Exemples : ["idf"]  |  ["idf", "60", "27", "45"]  |  ["idf", "hauts_de_france"]
+  # Une liste vide ne filtre rien.
+  departements: ["idf", "60", "27"]
+
+  # Que faire d'une annonce dont le code postal n'est pas lisible.
+  # true = on la garde, quitte a avoir du bruit.
+  garder_si_inconnu: true
+
+  # Nombre minimum d'annonces comparables en base avant d'oser calculer
+  # un prix de reference. En dessous, l'annonce est stockee mais pas notifiee.
+  comparables_minimum: 8
+
+
+# --- Alerteur "saines" : voitures roulantes sous le marche --------------------
+alertes_saines:
+  actif: true
+  intervalle_minutes: 5           # frequence de relecture de la base
+  seuil_alerte: 0.12              # 0.12 = 12 % sous le prix median
+  prix_plancher: 800              # en dessous, on ne notifie pas
+  # Variable d'environnement contenant l'identifiant de conversation Telegram
+  telegram_chat: TELEGRAM_CHAT_ID_SAINES
+
+# --- Alerteur "a reparer" : vehicules HS et tres bas prix ---------------------
+alertes_hs:
+  actif: true
+  intervalle_minutes: 5
+  marge_minimum: 1200             # marge estimee declenchant l'alerte
+  # Filet supplementaire : toute annonce sous ce prix passe, meme sans panne
+  # identifiee et meme sans assez de comparables pour calculer une marge.
+  prix_coup_de_filet: 1000
+  telegram_chat: TELEGRAM_CHAT_ID_HS
+
+# --- Profils de recherche ----------------------------------------------------
+# Chaque profil = une recherche. "motifs" sert au filtrage du titre.
+profils:
+  - id: clio3
+    libelle: "Renault Clio 3"
+    marque: renault
+    modele: clio
+    motifs: ["clio 3", "clio iii", "clio"]
+    annee_min: 2006
+    annee_max: 2012
+    km_max: 220000
+    prix_max: 4500
+
+  - id: clio4
+    libelle: "Renault Clio 4"
+    marque: renault
+    modele: clio
+    motifs: ["clio 4", "clio iv", "clio"]
+    annee_min: 2013
+    annee_max: 2019
+    km_max: 200000
+    prix_max: 7500
+
+  - id: twingo2
+    libelle: "Renault Twingo 2 (1.2 16v / 1.5 dCi 2011+)"
+    marque: renault
+    modele: twingo
+    motifs: ["twingo"]
+    motifs_moteur: ["1.2 16v", "1.2 16V", "1.5 dci", "1.5 dCi"]
+    annee_min: 2011
+    annee_max: 2014
+    km_max: 180000
+    prix_max: 4500
+
+  - id: peugeot_206
+    libelle: "Peugeot 206"
+    marque: peugeot
+    motifs: ["206"]
+    annee_min: 2004
+    annee_max: 2012
+    km_max: 240000
+    prix_max: 3500
+
+  - id: peugeot_207
+    libelle: "Peugeot 207"
+    marque: peugeot
+    motifs: ["207"]
+    annee_min: 2006
+    annee_max: 2014
+    km_max: 220000
+    prix_max: 5000
+
+  - id: peugeot_308
+    libelle: "Peugeot 308"
+    marque: peugeot
+    motifs: ["308"]
+    annee_min: 2007
+    annee_max: 2016
+    km_max: 220000
+    prix_max: 7000
+
+  - id: c3_hdi
+    libelle: "Citroen C3 1.4 / 1.6 HDi"
+    marque: citroen
+    modele: c3
+    motifs: ["c3"]
+    motifs_moteur: ["1.4 hdi", "1.6 hdi", "1.4 HDi", "1.6 HDi"]
+    annee_min: 2005
+    annee_max: 2016
+    km_max: 240000
+    prix_max: 5500
+
+  - id: golf_tdi
+    libelle: "VW Golf 4/5/6 TDI"
+    marque: volkswagen
+    motifs: ["golf"]
+    motifs_moteur: ["1.9 tdi", "2.0 tdi"]
+    annee_min: 2000
+    annee_max: 2013
+    km_max: 300000
+    prix_max: 7000
+
+  - id: polo_tdi
+    libelle: "VW Polo 9N TDI"
+    marque: volkswagen
+    motifs: ["polo"]
+    motifs_moteur: ["1.9 tdi", "1.4 tdi"]
+    annee_min: 2001
+    annee_max: 2009
+    km_max: 280000
+    prix_max: 4000
+
+  - id: yaris
+    libelle: "Toyota Yaris"
+    marque: toyota
+    motifs: ["yaris"]
+    annee_min: 2005
+    annee_max: 2018
+    km_max: 200000
+    prix_max: 6500
+
+  - id: corolla
+    libelle: "Toyota Corolla"
+    marque: toyota
+    motifs: ["corolla", "auris"]
+    annee_min: 2005
+    annee_max: 2018
+    km_max: 240000
+    prix_max: 8000
+
+  - id: fiesta_tdci
+    libelle: "Ford Fiesta 1.6 TDCi"
+    marque: ford
+    motifs: ["fiesta"]
+    motifs_moteur: ["1.6 tdci"]
+    annee_min: 2006
+    annee_max: 2017
+    km_max: 230000
+    prix_max: 5000
+
+  - id: focus_tdci
+    libelle: "Ford Focus 1.6 TDCi"
+    marque: ford
+    motifs: ["focus"]
+    motifs_moteur: ["1.6 tdci"]
+    annee_min: 2006
+    annee_max: 2017
+    km_max: 260000
+    prix_max: 6000
+
+# --- Vehicules a reparer et revendre -----------------------------------------
+reparation:
+  # Decote appliquee a la revente d'un vehicule remis en route par rapport a
+  # un vehicule sain de meme millesime : historique moins net, pas de suivi.
+  decote_revente: 0.12
+
+  # Fourchettes de cout, pieces et main d'oeuvre. REMPLACE-LES par tes couts
+  # reels : ce sont les chiffres qui decident si l'affaire vaut le coup.
+  # L'ordre compte : la premiere panne qui correspond est retenue, donc du
+  # plus grave au plus benin.
+  pannes:
+    moteur:
+      motifs: ["moteur hs", "moteur cassé", "moteur casse", "moteur serré",
+               "coule une bielle", "bielle coulée", "moteur à refaire"]
+      cout_min: 1500
+      cout_max: 3000
+    joint_culasse:
+      motifs: ["joint de culasse", "culasse", "jdc", "mayonnaise"]
+      cout_min: 900
+      cout_max: 1800
+    boite:
+      motifs: ["boîte hs", "boite hs", "boîte de vitesses hs", "bv hs",
+               "passe plus les vitesses", "boîte cassée"]
+      cout_min: 800
+      cout_max: 1800
+    accident:
+      motifs: ["accidenté", "accidente", "choc avant", "choc arrière",
+               "carrosserie à refaire", "tolerie"]
+      cout_min: 800
+      cout_max: 3000
+    embrayage:
+      motifs: ["embrayage", "volant moteur", "butée", "patine"]
+      cout_min: 450
+      cout_max: 1100
+    distribution:
+      motifs: ["distribution", "courroie", "chaîne de distribution"]
+      cout_min: 350
+      cout_max: 800
+    turbo:
+      motifs: ["turbo", "geometrie variable", "géométrie variable"]
+      cout_min: 500
+      cout_max: 1100
+    injection:
+      motifs: ["injecteur", "pompe à injection", "pompe injection", "rampe"]
+      cout_min: 400
+      cout_max: 1200
+    fap_egr:
+      motifs: ["fap", "filtre à particules", "vanne egr", "egr", "catalyseur"]
+      cout_min: 300
+      cout_max: 1000
+    electrique:
+      motifs: ["démarreur", "alternateur", "batterie", "faisceau", "calculateur"]
+      cout_min: 150
+      cout_max: 700
+    controle_technique:
+      motifs: ["ct refusé", "ct refuse", "contre-visite", "sans ct",
+               "controle technique refusé"]
+      cout_min: 300
+      cout_max: 1200
+    # Retenue quand le vehicule est annonce HS sans que la panne soit precisee.
+    # Fourchette large exprès : c'est le cas le plus risque.
+    indetermine:
+      motifs: []
+      cout_min: 400
+      cout_max: 2000
+
+# --- Sources -----------------------------------------------------------------
+sources:
+  lacentrale:
+    actif: true
+    # Pause entre deux requetes, en secondes. Ne descends pas sous 8.
+    pause_secondes: 12
+
+  # Lit les mails d'alerte des recherches sauvegardees leboncoin dans une
+  # boite IMAP. C'est la seule voie automatique vers leboncoin : aucun acces
+  # au site, donc rien qui puisse etre bloque.
+  mails_leboncoin:
+    actif: true
+    expediteur: "leboncoin.fr"

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veille annonces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fond:    #F6F7F8;
+    --surface: #FFFFFF;
+    --encre:   #16181C;
+    --gris:    #767C85;
+    --ligne:   #E3E5E8;
+    --bon:     #14664A;
+    --cher:    #9C4A2A;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--encre);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+  }
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  header { padding-bottom: 20px; border-bottom: 1px solid var(--ligne); }
+  h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .lien-outil {
+    float: right; font-size: 13px; font-weight: 400;
+    color: var(--gris); text-decoration: none; padding-top: 4px;
+  }
+  .lien-outil:hover { color: var(--encre); }
+  .resume { margin: 6px 0 0; color: var(--gris); font-size: 14px; font-weight: 300; }
+  .resume strong { color: var(--bon); font-weight: 500; }
+
+  nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 16px 0; }
+  nav a {
+    display: inline-block;
+    padding: 4px 11px;
+    border: 1px solid var(--ligne);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--gris);
+    font-size: 13px;
+    font-weight: 400;
+    text-decoration: none;
+  }
+  nav a:hover { color: var(--encre); border-color: #C9CDD3; }
+  nav a[aria-current="true"] {
+    background: var(--encre);
+    border-color: var(--encre);
+    color: #fff;
+  }
+  nav a.bonnes[aria-current="true"] { background: var(--bon); border-color: var(--bon); }
+
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { border-bottom: 1px solid var(--ligne); }
+  .annonce {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 24px;
+    align-items: baseline;
+    padding: 15px 2px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .annonce:hover .titre { text-decoration: underline; text-underline-offset: 2px; }
+  .titre {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    overflow-wrap: anywhere;
+  }
+  .prix { font-size: 17px; font-weight: 600; text-align: right; white-space: nowrap; }
+  .meta { grid-column: 1; color: var(--gris); font-size: 13px; font-weight: 300; }
+  .position { grid-column: 2; justify-self: end; width: 132px; }
+
+  .jauge { position: relative; height: 3px; background: var(--ligne); margin-top: 7px; }
+  .jauge .mediane { position: absolute; left: 50%; top: -3px; width: 1px; height: 9px; background: #B6BBC2; }
+  .jauge .point {
+    position: absolute; top: -2.5px; width: 8px; height: 8px;
+    border-radius: 50%; transform: translateX(-4px); background: var(--gris);
+  }
+  .jauge .point.bon  { background: var(--bon); }
+  .jauge .point.cher { background: var(--cher); }
+  .ecart { display: block; text-align: right; font-size: 12.5px; color: var(--gris); font-weight: 400; }
+  .ecart.bon  { color: var(--bon); font-weight: 500; }
+  .ecart.cher { color: var(--cher); }
+  .attente { display: block; text-align: right; font-size: 12.5px; color: #A2A8B0; font-weight: 300; }
+
+  .badge {
+    display: inline-block; margin-right: 7px; padding: 1px 7px;
+    border: 1px solid #D9C4A8; border-radius: 3px; background: #FDF6EC;
+    color: #8A5A21; font-size: 11.5px; font-weight: 500; vertical-align: 1.5px;
+  }
+  .marge { display: block; text-align: right; font-size: 12.5px; font-weight: 500; color: var(--gris); }
+  .marge.positive { color: var(--bon); }
+  .detail { display: block; text-align: right; font-size: 12px; color: #A2A8B0; font-weight: 300; margin-top: 2px; }
+  .alerte {
+    grid-column: 1 / -1; margin-top: 6px; padding-left: 13px;
+    border-left: 2px solid #D9A441; color: #8A5A21;
+    font-size: 12.5px; font-weight: 400;
+  }
+  nav.zone { padding-top: 0; }
+  nav.zone a { font-size: 12.5px; padding: 3px 9px; }
+  nav a.reparer[aria-current="true"] { background: #8A5A21; border-color: #8A5A21; }
+
+  .vide { padding: 48px 0; color: var(--gris); font-weight: 300; max-width: 46ch; }
+  .vide p { margin: 0 0 10px; }
+
+  @media (max-width: 560px) {
+    .annonce { grid-template-columns: 1fr; }
+    .prix { text-align: left; grid-column: 1; font-size: 16px; }
+    .position { grid-column: 1; justify-self: stretch; width: 100%; max-width: 200px; }
+    .ecart, .attente, .marge, .detail { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Veille annonces <a class="lien-outil" href="/estimer">estimer une voiture →</a></h1>
+    <p class="resume">
+      {{ annonces|length }} annonce{{ 's' if annonces|length > 1 else '' }} suivie{{ 's' if annonces|length > 1 else '' }},
+      dont <strong>{{ nb_bonnes }}</strong> sous le marché d'au moins {{ (seuil * 100)|round|int }} %,
+      et <strong>{{ nb_marge }}</strong> à réparer avec une marge estimée au-delà de {{ marge_min }} €.
+    </p>
+  </header>
+
+  {% set base_qs = ([]
+     + (['profil=' ~ profil_actif] if profil_actif else [])
+     + (['etat=' ~ etat_actif] if etat_actif else [])
+     + (['bonnes=1'] if bonnes_seulement else []))|join('&') %}
+  <nav>
+    <a href="/" {% if not profil_actif and not bonnes_seulement %}aria-current="true"{% endif %}>Tout</a>
+    <a class="bonnes" href="/?bonnes=1{% if profil_actif %}&profil={{ profil_actif }}{% endif %}"
+       {% if bonnes_seulement %}aria-current="true"{% endif %}>Bonnes affaires</a>
+    <a href="/?etat=sain{% if profil_actif %}&profil={{ profil_actif }}{% endif %}"
+       {% if etat_actif == 'sain' %}aria-current="true"{% endif %}>Roulantes</a>
+    <a class="reparer" href="/?etat=reparer{% if profil_actif %}&profil={{ profil_actif }}{% endif %}"
+       {% if etat_actif == 'reparer' %}aria-current="true"{% endif %}>À réparer</a>
+    {% for p in profils %}
+      <a href="/?profil={{ p.id }}{% if bonnes_seulement %}&bonnes=1{% endif %}{% if etat_actif %}&etat={{ etat_actif }}{% endif %}"
+         {% if profil_actif == p.id %}aria-current="true"{% endif %}>{{ p.libelle }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if departements %}
+  <nav class="zone">
+    <a href="/?{{ base_qs }}" {% if not dep_actif %}aria-current="true"{% endif %}>Toute la zone</a>
+    {% for d in departements %}
+      <a href="/?dep={{ d }}{% if base_qs %}&{{ base_qs }}{% endif %}"
+         {% if dep_actif == d %}aria-current="true"{% endif %}>{{ d }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if annonces %}
+  <ol>
+    {% for a in annonces %}
+      {% set e = a.ecart %}
+      <li>
+        <a class="annonce" href="{{ a.url }}" target="_blank" rel="noopener">
+          <span class="titre">{% if a.etat == 'reparer' %}<span class="badge">à réparer</span>{% endif %}{{ a.titre or 'Sans titre' }}</span>
+          <span class="prix">{{ a.prix|euros }}</span>
+          <span class="meta">
+            {{ a.annee or '—' }} · {{ a.km|kilometres }} · {{ a.source }}{% if a.code_postal %} · {{ a.code_postal }}{% elif a.departement %} · dép. {{ a.departement }}{% endif %}
+          </span>
+          <span class="position">
+            {% if a.etat == 'reparer' %}
+              {% if a.marge is not none %}
+                <span class="marge {{ 'positive' if a.marge >= marge_min else '' }}">
+                  marge ~{{ a.marge|euros }}
+                </span>
+                <span class="detail">
+                  revente {{ a.prix_median|euros }} · repa. {{ a.cout_min }}–{{ a.cout_max }} €
+                </span>
+              {% else %}
+                <span class="attente">marge incalculable, pas assez de références</span>
+              {% endif %}
+            {% elif e is not none %}
+              {% set pos = (50 - (e * 100 * 1.6))|round(1) %}
+              <span class="ecart {{ 'bon' if e >= seuil else ('cher' if e < -0.05 else '') }}">
+                {% if e >= 0 %}{{ (e * 100)|round|int }} % sous{% else %}{{ (-e * 100)|round|int }} % au-dessus{% endif %}
+                du marché
+              </span>
+              <span class="jauge" title="Référence {{ a.prix_median|euros }} sur {{ a.comparables }} annonces">
+                <span class="mediane"></span>
+                <span class="point {{ 'bon' if e >= seuil else ('cher' if e < -0.05 else '') }}"
+                      style="left: {{ [[pos, 2]|max, 98]|min }}%"></span>
+              </span>
+            {% else %}
+              <span class="attente">pas assez de comparables{% if a.comparables %} ({{ a.comparables }}){% endif %}</span>
+            {% endif %}
+          </span>
+          {% if a.drapeaux %}
+            <span class="alerte">
+              {%- set libelles_drapeaux = {
+                'gage': "Véhicule gagé : la carte grise ne peut pas être transférée tant que l'opposition n'est pas levée.",
+                'procedure_vge': "Procédure VGE/VEI : véhicule immobilisé administrativement, une expertise doit valider la réparation avant remise en circulation.",
+                'sans_papiers': "Pas de carte grise annoncée.",
+                'pour_pieces': "Annoncé pour pièces : vérifier que le véhicule est réimmatriculable."
+              } -%}
+              {% for d in a.drapeaux.split(';') if d %}{{ libelles_drapeaux.get(d, d) }} {% endfor %}
+            </span>
+          {% endif %}
+        </a>
+      </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="vide">
+    <p>Rien collecté pour l'instant.</p>
+    <p>Le collecteur passe toutes les 25 minutes. Laisse-le tourner quelques
+       jours : le prix de référence a besoin d'un historique avant de pouvoir
+       repérer une bonne affaire.</p>
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>
